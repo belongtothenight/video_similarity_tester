@@ -15,7 +15,7 @@ import itertools
 
 class VideoSimilarityTester:
     #* Class to test similarity between videos
-    def __init__(self, URL_list_filepath: str, cache_path:str, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True) -> None:
+    def __init__(self, URL_list_filepath: str, cache_path:str, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, similar_percentage=15) -> None:
         #* Load URL list from file
         self.URL_list_filepath = URL_list_filepath
         self.cache_path = cache_path
@@ -23,6 +23,7 @@ class VideoSimilarityTester:
         self.export_video_detail = export_video_detail
         self.export_comparison_result = export_comparison_result
         self.remove_cache = remove_cache
+        self.similar_percentage = similar_percentage
         self.URL_list = np.empty(0, dtype=str)
         self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH"])
         with open(self.URL_list_filepath, "r") as f:
@@ -71,6 +72,7 @@ class VideoSimilarityTester:
             logging.debug("Hashing video from {}.".format(path))
             #* Hash video
             videohash = VideoHash(path)
+            videohash.similar_percentage = self.similar_percentage
             #* Save data to list
             self.VideoHash_list.append(videohash)
             self.HASH_list = np.append(self.HASH_list, videohash.hash)
@@ -131,4 +133,4 @@ class VideoSimilarityTester:
 if __name__ == "__main__":
     filepath = "./URL_list.csv"
     cache_path = "./cache"
-    tester = VideoSimilarityTester(filepath, cache_path, export_video_detail=cache_path, export_comparison_result=cache_path)
+    tester = VideoSimilarityTester(filepath, cache_path, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10)
