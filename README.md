@@ -1,6 +1,6 @@
 # video_similarity_tester
 
-This repo aims for developping a automatic batch video similarity tester.
+This repo aims for developing a automatic batch video similarity tester.
 
 ## Usage
 
