@@ -1,0 +1,4 @@
+1. Original vs. cut: similar
+2. Original vs. cropping: similar
+3. Original vs. transform_shift: similar
+4. Original vs. transform_size: similar
