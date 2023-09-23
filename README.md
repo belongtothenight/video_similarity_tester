@@ -2,11 +2,11 @@
 
 This repo aims for developping a automatic batch video similarity tester.
 
-## Work Flow
+## Usage
 
-1. Retrieve video from URLs.
-2. Use [VideoHash](https://github.com/akamhy/videohash) to create hash value for all videos.
-3. Cross compare all of the testing videos.
+1. Create a list of YouTube links of videos like "./src/URL_list.csv".
+2. Specify parameters and execute "./src/main.c".
+3. The program will generate result files like "./src/cache/comparison_result.csv", and "./src/cache/video_detail.csv".
 
 ## Reference
 

@@ -16,7 +16,7 @@ import itertools
 class VideoSimilarityTester:
     #* Class to test similarity between videos
     def __init__(self, URL_list_filepath: str, cache_path:str, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, similar_percentage=15) -> None:
-        #* Load URL list from file
+        #* Initialize class
         self.URL_list_filepath = URL_list_filepath
         self.cache_path = cache_path
         self.download_resolution = download_resolution
@@ -24,6 +24,22 @@ class VideoSimilarityTester:
         self.export_comparison_result = export_comparison_result
         self.remove_cache = remove_cache
         self.similar_percentage = similar_percentage
+        #* Check if path is valid
+        if not os.path.exists(self.URL_list_filepath):
+            logging.critical("URL list file does not exist.")
+            raise Exception("URL list file does not exist.")
+        if not os.path.exists(self.cache_path):
+            logging.critical("Cache path does not exist.")
+            raise Exception("Cache path does not exist.")
+        if self.export_video_detail != False:
+            if not os.path.exists(self.export_video_detail):
+                logging.critical("Export video detail path does not exist.")
+                raise Exception("Export video detail path does not exist.")
+        if self.export_comparison_result != False:
+            if not os.path.exists(self.export_comparison_result):
+                logging.critical("Export comparison result path does not exist.")
+                raise Exception("Export comparison result path does not exist.")
+        #* Load URL list from file
         self.URL_list = np.empty(0, dtype=str)
         self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH"])
         with open(self.URL_list_filepath, "r") as f:
@@ -37,6 +53,7 @@ class VideoSimilarityTester:
         #* Call next function on the line
         self._download_video()
         self._hash_video()
+        self._finger_print_video()
         self._compare_video()
         self._remove_cache()
 
@@ -96,6 +113,9 @@ class VideoSimilarityTester:
             self.video_detail_dataframe.to_csv(export_path, index=False)
             print("Exported video detail to {}.".format(export_path))
     
+    def _finger_print_video(self) -> None:
+        pass
+
     def _compare_video(self) -> None:
         #* Compare video
         self.comparison_dataframe = pd.DataFrame(columns=["vid1_idx", "vid2_idx", "similarity"])
