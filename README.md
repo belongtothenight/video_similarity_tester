@@ -4,13 +4,22 @@ This repo aims for developing a automatic batch video similarity tester.
 
 ## Requirement
 
-1. FFMPEG
+**FFMPEG**
 
 ## Usage
 
+Python environment:
 ```
-Usage: python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+```
 
+Downloaded release:
+```
+vst_v1.0.0.exe <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+```
+
+Help message:
+```
 For URL links: ONLY ACCEPT YOUTUBE LINKS
 
 Weight calculation: (hash_similarity * weight) + (fingerprint_similarity * (1-weight))
