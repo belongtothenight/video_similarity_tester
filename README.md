@@ -13,7 +13,7 @@ Python environment:
 python main.py ./URL.csv ./cache ./cache --remove-cache
 ```
 
-Downloaded release:
+Downloaded release: ([Download](https://github.com/belongtothenight/video_similarity_tester/releases/tag/v1.0.0))
 ```
 vst_v1.0.0.exe ./URL.csv ./cache ./cache --remove-cache
 ```
