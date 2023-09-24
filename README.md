@@ -10,16 +10,18 @@ This repo aims for developing a automatic batch video similarity tester.
 
 Python environment:
 ```
-python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+python main.py ./URL.csv ./cache ./cache --remove-cache
 ```
 
 Downloaded release:
 ```
-vst_v1.0.0.exe <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+vst_v1.0.0.exe ./URL.csv ./cache ./cache --remove-cache
 ```
 
 Help message:
 ```
+python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+
 For URL links: ONLY ACCEPT YOUTUBE LINKS
 
 Weight calculation: (hash_similarity * weight) + (fingerprint_similarity * (1-weight))
