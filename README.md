@@ -2,6 +2,10 @@
 
 This repo aims for developing a automatic batch video similarity tester.
 
+## Requirement
+
+1. FFMPEG
+
 ## Usage
 
 1. Create a list of YouTube links of videos like "./src/URL_list.csv" or a list of vidoe path like "./src/PATH_list.csv".
@@ -15,6 +19,11 @@ This repo aims for developing a automatic batch video similarity tester.
 3. Compare all video combinations possible and generate corresponding similarity data.
 4. Normalize fingerprint similarity data to limite data range.
 5. Calculate mix similarity data with user given weight to both hash and fingerprint data.
+
+## Future Steps
+
+1. Use methods like numba or cython to speed up.
+2. Pack code into executable.
 
 ## Reference
 
