@@ -13,3 +13,7 @@
 | 9   | 20230924 | Add custom comparison function.                                                                    |
 | 10  | 20230924 | Add fingerprinting capability, weighted similarity index.                                          |
 | 11  | 20230924 | Add "Process Flow" in "./README.md".                                                               |
+| 12  | 20230924 | Add CLI wrapper.                                                                                   |
+| 13  | 20230924 | Update "./gitignore" to exclude build data.                                                        |
+| 14  | 20230924 | Add build command to "./README.md".                                                                |
+| 15  | 20230924 | Update usage of "./README.md".                                                                     |

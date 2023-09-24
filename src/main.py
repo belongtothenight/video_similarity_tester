@@ -7,6 +7,8 @@ import csv
 import logging
 import os
 import itertools
+import sys
+import getopt
 
 # logging.basicConfig(level=logging.DEBUG)
 # logging.basicConfig(level=logging.INFO)
@@ -53,7 +55,7 @@ class VideoSimilarityTester:
                 raise Exception("Export comparison result path does not exist.")
         #* Create variable
         self.URL_list = np.empty(0, dtype=str)
-        self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH", "FINGER_PRINT"])
+        self.video_detail_dataframe = pd.DataFrame(columns=["URL", "TITLE", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH", "FINGER_PRINT"])
         #* Call next function on the line
         if self.input_method == "URL_list":
             self.input_filepath = self.URL_list_filepath
@@ -93,6 +95,7 @@ class VideoSimilarityTester:
     def _download_video(self) -> None:
         #* Create variable
         self.PATH_list = np.empty(0, dtype=str)
+        self.TITLE_list = np.empty(0, dtype=str)
         #* Download video from URL
         for i, url in enumerate(self.URL_list):
             logging.debug("Downloading video from {}.".format(url))
@@ -104,10 +107,12 @@ class VideoSimilarityTester:
             yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first().download(filename=path)
             #* Save data to list
             self.PATH_list = np.append(self.PATH_list, path)
+            self.TITLE_list = np.append(self.TITLE_list, yt.title)
             print("Downloaded {}/{} videos.".format(i+1, self.URL_list.shape[0]), end="\r")
         if self.PATH_list.shape[0] != self.URL_list.shape[0]:
             logging.warning("Some videos are not downloaded.")
         self.video_detail_dataframe["PATH"] = self.PATH_list
+        self.video_detail_dataframe["TITLE"] = self.TITLE_list
         logging.debug("Downloaded video list: {}".format(self.PATH_list))
         logging.info("Downloaded {} videos.".format(self.PATH_list.shape[0]))
         print("Video downloading phase complete.")
@@ -245,11 +250,76 @@ class VideoSimilarityTester:
         s = string.lower()
         return [s[i:i+2] for i in list(range(len(s) - 1))]
 
+def input_file_check(input_filepath: str) -> None:
+    #* Check if path is valid
+    if not os.path.exists(input_filepath):
+        logging.critical("Input file does not exist.")
+        raise Exception("Input file does not exist.")
+    #* Read first line
+    with open(input_filepath, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            first_line = row
+            break
+    #* Check if first line is URL or PATH
+    if first_line[0].startswith("http"):
+        input_method = "URL_list"
+    else:
+        input_method = "PATH_list"
+    return input_method
 
+def execute():
+    """    Video Similarity Tester
+    Usage: python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+    !!!For URL links: ONLY ACCEPT YOUTUBE LINKS!!!
+    Weight calculation: (hash_similarity * weight) + (fingerprint_similarity * (1-weight))
+    sys.argv[1] path of list file
+    sys.argv[2] path of cache folder
+    sys.argv[3] path of export result folder
+    sys.argv[?] (--remove-cache) remove cache after execution
+    sys.argv[?] (--weight) weight of videohash method (default: 0.7)
+    sys.argv[?] (-h/--help) help (show available options)
+    """
+    #* Check arguments
+    available_short_options = "h:"
+    available_long_options = ["remove-cache", "weight=", "help"]
+    try:
+        opts, args = getopt.getopt(sys.argv[4:], available_short_options, available_long_options)
+    except getopt.GetoptError:
+        logging.critical("Invalid arguments.")
+        raise Exception("Invalid arguments.")
+    #* Check for help
+    if len(sys.argv) < 4:
+        if '-h' in sys.argv or '--help' in sys.argv:
+            print(execute.__doc__)
+            sys.exit()
+        else:
+            logging.critical("Not enough arguments.")
+            raise Exception("Not enough arguments.")
+    #* Initialize variable
+    remove_cache = False
+    method_weight = 0.7
+    list_filepath = sys.argv[1]
+    cache_path = sys.argv[2]
+    export_result_path = sys.argv[3]
+    #* Parse arguments
+    for opt, arg in opts:
+        if opt in ("--remove-cache"):
+            remove_cache = True
+        elif opt in ("--weight"):
+            method_weight = float(arg)
+    #* Check input method (URL list or PATH list)
+    input_method = input_file_check(list_filepath)
+    #* Call class
+    if input_method == "URL_list":
+        VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=list_filepath, export_video_detail=export_result_path, export_comparison_result=export_result_path, remove_cache=remove_cache, method_weight=[method_weight, 1-method_weight])
+    elif input_method == "PATH_list":
+        VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=list_filepath, export_video_detail=export_result_path, export_comparison_result=export_result_path, remove_cache=remove_cache, method_weight=[method_weight, 1-method_weight])
 
 if __name__ == "__main__":
-    URL_filepath = "./URL_list.csv"
-    PATH_filepath = "./PATH_list.csv"
-    cache_path = "./cache"
-    # VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=URL_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
-    VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=PATH_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
+    # URL_filepath = "./URL_list.csv"
+    # PATH_filepath = "./PATH_list.csv"
+    # cache_path = "./cache"
+    # # VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=URL_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
+    # VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=PATH_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
+    execute()
