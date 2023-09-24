@@ -16,12 +16,12 @@ Format your CSV file content to be either in **[PATH](https://github.com/belongt
 
 Python environment:
 ```
-python main.py ./URL.csv ./cache ./cache --remove-cache
+python main.py ./URL.csv ./cache ./cache --remove-cache --weight=0.7
 ```
 
 Downloaded release: ([Download](https://github.com/belongtothenight/video_similarity_tester/releases/tag/v1.0.0))
 ```
-vst_v1.0.0.exe ./PATH.csv ./cache ./cache --remove-cache
+vst_v1.0.0.exe ./PATH.csv ./cache ./cache --remove-cache --weight=0.7
 ```
 
 Help message:
