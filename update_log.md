@@ -11,3 +11,5 @@
 | 7   | 20230924 | Add ability to take local video files.                                                             |
 | 8   | 20230924 | Add "./gitignore".                                                                                 |
 | 9   | 20230924 | Add custom comparison function.                                                                    |
+| 10  | 20230924 | Add fingerprinting capability, weighted similarity index.                                          |
+| 11  | 20230924 | Add "Process Flow" in "./README.md".                                                               |

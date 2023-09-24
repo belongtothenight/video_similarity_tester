@@ -1,5 +1,6 @@
 from videohash import VideoHash
 from pytube import YouTube
+import videofingerprint as vfp
 import pandas as pd
 import numpy as np
 import csv
@@ -15,7 +16,7 @@ import itertools
 
 class VideoSimilarityTester:
     #* Class to test similarity between videos
-    def __init__(self, cache_path:str, URL_list_filepath=None, PATH_list_filepath=None, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, similar_percentage=15) -> None:
+    def __init__(self, cache_path:str, URL_list_filepath=None, PATH_list_filepath=None, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, method_weight=[0.7, 0.3]) -> None:
         #* Check input method (URL list or PATH list)
         if URL_list_filepath == None and PATH_list_filepath == None:
             logging.critical("URL list or PATH list must be provided.")
@@ -29,7 +30,7 @@ class VideoSimilarityTester:
         self.export_video_detail = export_video_detail
         self.export_comparison_result = export_comparison_result
         self.remove_cache = remove_cache
-        self.similar_percentage = similar_percentage
+        self.method_weight = method_weight
         #* Check if path is valid
         if self.input_method == "URL_list":
             if not os.path.exists(self.URL_list_filepath):
@@ -52,7 +53,7 @@ class VideoSimilarityTester:
                 raise Exception("Export comparison result path does not exist.")
         #* Create variable
         self.URL_list = np.empty(0, dtype=str)
-        self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH"])
+        self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH", "FINGER_PRINT"])
         #* Call next function on the line
         if self.input_method == "URL_list":
             self.input_filepath = self.URL_list_filepath
@@ -63,7 +64,9 @@ class VideoSimilarityTester:
             self._load_PATH_list()
         self._hash_video()
         self._finger_print_video()
-        self._compare_video()
+        if self.export_video_detail != False:
+            self._write_video_detail()
+        self._generate_result()
         self._remove_cache()
 
     def _load_URL_list(self) -> None:
@@ -88,8 +91,9 @@ class VideoSimilarityTester:
         print("PATH list loading phase complete.")
 
     def _download_video(self) -> None:
-        #* Download video from URL
+        #* Create variable
         self.PATH_list = np.empty(0, dtype=str)
+        #* Download video from URL
         for i, url in enumerate(self.URL_list):
             logging.debug("Downloading video from {}.".format(url))
             path = os.path.join(self.cache_path, str(i)+".mp4")
@@ -109,17 +113,17 @@ class VideoSimilarityTester:
         print("Video downloading phase complete.")
 
     def _hash_video(self) -> None:
-        #* Hash video
+        #* Create variable
         self.VideoHash_list = []
         self.HASH_list = np.empty(0, dtype=str)
         self.HASH_HEX_list = np.empty(0, dtype=str)
         self.COLLAGE_PATH_list = np.empty(0, dtype=str)
         self.BITS_IN_HASH_list = np.empty(0, dtype=str)
+        #* Hash video
         for i, path in enumerate(self.PATH_list):
             logging.debug("Hashing video from {}.".format(path))
             #* Hash video
             videohash = VideoHash(path)
-            videohash.similar_percentage = self.similar_percentage
             #* Save data to list
             self.VideoHash_list.append(videohash)
             self.HASH_list = np.append(self.HASH_list, videohash.hash)
@@ -137,31 +141,58 @@ class VideoSimilarityTester:
         logging.debug("Hashed video list: {}".format(self.VideoHash_list))
         logging.info("Hashed {} videos.".format(len(self.VideoHash_list)))
         print("Video hashing phase complete.")
-        if self.export_video_detail != False:
-            export_path = os.path.join(self.export_video_detail, "video_detail.csv")
-            export_path = os.path.abspath(export_path)
-            self.video_detail_dataframe.to_csv(export_path, index=False)
-            print("Exported video detail to {}.".format(export_path))
     
     def _finger_print_video(self) -> None:
-        pass
+        #* Create variable
+        self.FINGER_PRINT_list = np.empty(0, dtype=str)
+        #* Fingerprint video
+        for i, path in enumerate(self.PATH_list):
+            logging.debug("Fingerprinting video from {}.".format(path))
+            #* Fingerprint video
+            vp = vfp.VideoFingerprint(path)
+            #* Save data to list
+            self.FINGER_PRINT_list = np.append(self.FINGER_PRINT_list, vp.fingerprint)
+            print("Fingerprinted {}/{} videos.".format(i+1, self.PATH_list.shape[0]), end="\r")
+        if self.FINGER_PRINT_list.shape[0] != self.PATH_list.shape[0]:
+            logging.warning("Some videos are not fingerprinted.")
+        self.video_detail_dataframe["FINGER_PRINT"] = self.FINGER_PRINT_list
+        logging.debug("Fingerprinted video list: {}".format(self.VideoHash_list))
+        logging.info("Fingerprinted {} videos.".format(len(self.VideoHash_list)))
+        print("Video fingerprinting phase complete.")
 
-    def _compare_video(self) -> None:
-        #* Compare video
-        self.comparison_dataframe = pd.DataFrame(columns=["vid1_idx", "vid2_idx", "similarity"])
+    def _write_video_detail(self) -> None:
+        export_path = os.path.join(self.export_video_detail, "video_detail.csv")
+        export_path = os.path.abspath(export_path)
+        self.video_detail_dataframe.to_csv(export_path, index=False)
+        print("Exported video detail to {}.".format(export_path))
+
+    def _generate_result(self) -> None:
+        #* Create variable
+        self.comparison_dataframe = pd.DataFrame(columns=["vid1_idx", "vid2_idx", "mix_idx", "hash_similarity", "fingerprint_similarity", "avg_similarity"])
         self.comparison_vid1_idx_list = np.empty(0, dtype=int)
         self.comparison_vid2_idx_list = np.empty(0, dtype=int)
-        self.comparison_result_list = np.empty(0, dtype=bool)
+        self.comparison_mix_idx_list = np.empty(0, dtype=str)
+        self.comparison_result_list1 = np.empty(0, dtype=float)
+        self.comparison_result_list2 = np.empty(0, dtype=float)
+        #* Compare video
         for i, j in itertools.combinations(self.VideoHash_list, 2):
-            self.comparison_vid1_idx_list = np.append(self.comparison_vid1_idx_list, self.VideoHash_list.index(i))
-            self.comparison_vid2_idx_list = np.append(self.comparison_vid2_idx_list, self.VideoHash_list.index(j))
+            cmp_obj_1 = self.VideoHash_list.index(i)
+            cmp_obj_2 = self.VideoHash_list.index(j)
+            self.comparison_vid1_idx_list = np.append(self.comparison_vid1_idx_list, cmp_obj_1)
+            self.comparison_vid2_idx_list = np.append(self.comparison_vid2_idx_list, cmp_obj_2)
+            self.comparison_mix_idx_list = np.append(self.comparison_mix_idx_list, str(cmp_obj_1)+"-"+str(cmp_obj_2))
             #! Abandoned using VideoHash.is_similar() because it shows too little information
-            # self.comparison_result_list = np.append(self.comparison_result_list, i.is_similar(j))
-            self.comparison_result_list = np.append(self.comparison_result_list, self.__compare_result(i.hash, j.hash))
+            # self.comparison_result_list1 = np.append(self.comparison_result_list1, i.is_similar(j))
+            self.comparison_result_list1 = np.append(self.comparison_result_list1, self.__compare_code(i.hash, j.hash))
+            self.comparison_result_list2 = np.append(self.comparison_result_list2, self.__compare_code(self.FINGER_PRINT_list[cmp_obj_1], self.FINGER_PRINT_list[cmp_obj_2]))
         self.comparison_dataframe["vid1_idx"] = self.comparison_vid1_idx_list
         self.comparison_dataframe["vid2_idx"] = self.comparison_vid2_idx_list
-        self.comparison_dataframe["similarity"] = self.comparison_result_list
-        del self.comparison_vid1_idx_list, self.comparison_vid2_idx_list, self.comparison_result_list
+        self.comparison_dataframe["mix_idx"] = self.comparison_mix_idx_list
+        #* Individual similarity boost
+        self.comparison_dataframe["hash_similarity"] = self.comparison_result_list1
+        self.comparison_dataframe["fingerprint_similarity"] = (self.comparison_result_list2 - self.comparison_result_list2.min()) / (self.comparison_result_list2.max() - self.comparison_result_list2.min()) #* Normalize fingerprint similarity
+        self.comparison_dataframe["avg_similarity"] = (self.comparison_dataframe["hash_similarity"] * self.method_weight[0]) + (self.comparison_dataframe["fingerprint_similarity"] * self.method_weight[1])
+        del self.comparison_vid1_idx_list, self.comparison_vid2_idx_list, self.comparison_result_list1, self.comparison_result_list2
         logging.debug("Comparison dataframe: {}".format(self.comparison_dataframe))
         logging.info("Comparison dataframe generated.")
         print("Video comparison phase complete.")
@@ -182,18 +213,37 @@ class VideoSimilarityTester:
         logging.info("Removed {} files.".format(len(self.PATH_list)))
         print("Cache removing phase complete.")
 
-    def __compare_result(self, vid1_code: str, vid2_code: str) -> None:
+    def __compare_code(self, vid1_code: str, vid2_code: str) -> None:
         #* Check two code should be same length
         if len(vid1_code) != len(vid2_code):
-            logging.critical("Two code should be same length.")
-            raise Exception("Two code should be same length.")
-        #* Compare two code
-        diffcnt = 0
-        for i in range(len(vid1_code)):
-            if vid1_code[i] != vid2_code[i]:
-                diffcnt += 1
-        similarity = (len(vid1_code) - diffcnt) / len(vid1_code)
-        return similarity
+            """
+            Perform bigram comparison between two strings
+            and return a percentage match in decimal form.
+            """
+            pairs1 = self.___get_bigrams(vid1_code)
+            pairs2 = self.___get_bigrams(vid2_code)
+            union  = len(pairs1) + len(pairs2)
+            hit_count = 0
+            for x in pairs1:
+                for y in pairs2:
+                    if x == y:
+                        hit_count += 1
+                        break
+            return (2.0 * hit_count) / union
+        else:
+            #* Compare two code
+            diffcnt = 0
+            for i in range(len(vid1_code)):
+                if vid1_code[i] != vid2_code[i]:
+                    diffcnt += 1
+            return (len(vid1_code) - diffcnt) / len(vid1_code)
+    
+    def ___get_bigrams(self, string):
+        """
+        Take a string and return a list of bigrams.
+        """
+        s = string.lower()
+        return [s[i:i+2] for i in list(range(len(s) - 1))]
 
 
 
@@ -201,5 +251,5 @@ if __name__ == "__main__":
     URL_filepath = "./URL_list.csv"
     PATH_filepath = "./PATH_list.csv"
     cache_path = "./cache"
-    # VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=URL_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10, remove_cache=False)
-    VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=PATH_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10, remove_cache=False)
+    # VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=URL_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
+    VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=PATH_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, remove_cache=False)
