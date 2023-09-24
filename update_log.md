@@ -10,3 +10,4 @@
 | 6   | 20230924 | Add filepath exist check to "./src/main.py".                                                       |
 | 7   | 20230924 | Add ability to take local video files.                                                             |
 | 8   | 20230924 | Add "./gitignore".                                                                                 |
+| 9   | 20230924 | Add custom comparison function.                                                                    |

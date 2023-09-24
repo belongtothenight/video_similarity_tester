@@ -155,7 +155,9 @@ class VideoSimilarityTester:
         for i, j in itertools.combinations(self.VideoHash_list, 2):
             self.comparison_vid1_idx_list = np.append(self.comparison_vid1_idx_list, self.VideoHash_list.index(i))
             self.comparison_vid2_idx_list = np.append(self.comparison_vid2_idx_list, self.VideoHash_list.index(j))
-            self.comparison_result_list = np.append(self.comparison_result_list, i.is_similar(j))
+            #! Abandoned using VideoHash.is_similar() because it shows too little information
+            # self.comparison_result_list = np.append(self.comparison_result_list, i.is_similar(j))
+            self.comparison_result_list = np.append(self.comparison_result_list, self.__compare_result(i.hash, j.hash))
         self.comparison_dataframe["vid1_idx"] = self.comparison_vid1_idx_list
         self.comparison_dataframe["vid2_idx"] = self.comparison_vid2_idx_list
         self.comparison_dataframe["similarity"] = self.comparison_result_list
@@ -180,8 +182,19 @@ class VideoSimilarityTester:
         logging.info("Removed {} files.".format(len(self.PATH_list)))
         print("Cache removing phase complete.")
 
-    def __compare_result(self, vid1_code, vid2_code) -> None:
-        pass
+    def __compare_result(self, vid1_code: str, vid2_code: str) -> None:
+        #* Check two code should be same length
+        if len(vid1_code) != len(vid2_code):
+            logging.critical("Two code should be same length.")
+            raise Exception("Two code should be same length.")
+        #* Compare two code
+        diffcnt = 0
+        for i in range(len(vid1_code)):
+            if vid1_code[i] != vid2_code[i]:
+                diffcnt += 1
+        similarity = (len(vid1_code) - diffcnt) / len(vid1_code)
+        return similarity
+
 
 
 if __name__ == "__main__":

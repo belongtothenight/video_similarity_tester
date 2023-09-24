@@ -12,3 +12,4 @@ This repo aims for developing a automatic batch video similarity tester.
 
 1. [VideoHash](https://github.com/akamhy/videohash)
 2. [PyTube](https://www.the-analytics.club/download-youtube-videos-in-python/)
+3. [Python - difference between two strings](https://stackoverflow.com/questions/17904097/python-difference-between-two-strings)
