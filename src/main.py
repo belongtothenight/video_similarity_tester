@@ -15,9 +15,15 @@ import itertools
 
 class VideoSimilarityTester:
     #* Class to test similarity between videos
-    def __init__(self, URL_list_filepath: str, cache_path:str, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, similar_percentage=15) -> None:
+    def __init__(self, cache_path:str, URL_list_filepath=None, PATH_list_filepath=None, download_resolution=0, export_video_detail=False, export_comparison_result=False, remove_cache=True, similar_percentage=15) -> None:
+        #* Check input method (URL list or PATH list)
+        if URL_list_filepath == None and PATH_list_filepath == None:
+            logging.critical("URL list or PATH list must be provided.")
+            raise Exception("URL list or PATH list must be provided.")
+        self.input_method = "URL_list" if URL_list_filepath != None else "PATH_list"
         #* Initialize class
         self.URL_list_filepath = URL_list_filepath
+        self.PATH_list_filepath = PATH_list_filepath
         self.cache_path = cache_path
         self.download_resolution = download_resolution
         self.export_video_detail = export_video_detail
@@ -25,9 +31,14 @@ class VideoSimilarityTester:
         self.remove_cache = remove_cache
         self.similar_percentage = similar_percentage
         #* Check if path is valid
-        if not os.path.exists(self.URL_list_filepath):
-            logging.critical("URL list file does not exist.")
-            raise Exception("URL list file does not exist.")
+        if self.input_method == "URL_list":
+            if not os.path.exists(self.URL_list_filepath):
+                logging.critical("URL list file does not exist.")
+                raise Exception("URL list file does not exist.")
+        elif self.input_method == "PATH_list":
+            if not os.path.exists(self.PATH_list_filepath):
+                logging.critical("PATH list file does not exist.")
+                raise Exception("PATH list file does not exist.")
         if not os.path.exists(self.cache_path):
             logging.critical("Cache path does not exist.")
             raise Exception("Cache path does not exist.")
@@ -39,10 +50,24 @@ class VideoSimilarityTester:
             if not os.path.exists(self.export_comparison_result):
                 logging.critical("Export comparison result path does not exist.")
                 raise Exception("Export comparison result path does not exist.")
-        #* Load URL list from file
+        #* Create variable
         self.URL_list = np.empty(0, dtype=str)
         self.video_detail_dataframe = pd.DataFrame(columns=["URL", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH"])
-        with open(self.URL_list_filepath, "r") as f:
+        #* Call next function on the line
+        if self.input_method == "URL_list":
+            self.input_filepath = self.URL_list_filepath
+            self._load_URL_list()
+            self._download_video()
+        elif self.input_method == "PATH_list":
+            self.input_filepath = self.PATH_list_filepath
+            self._load_PATH_list()
+        self._hash_video()
+        self._finger_print_video()
+        self._compare_video()
+        self._remove_cache()
+
+    def _load_URL_list(self) -> None:
+        with open(self.input_filepath, "r") as f:
             reader = csv.reader(f)
             for row in reader:
                 self.URL_list = np.append(self.URL_list, row[0])
@@ -50,12 +75,17 @@ class VideoSimilarityTester:
         logging.debug("Loaded URL list: {}".format(self.URL_list))
         logging.info("Loaded URL list from {} with {} {} files.".format(self.URL_list_filepath, self.URL_list.shape[0], self.URL_list.shape))
         print("URL list loading phase complete.")
-        #* Call next function on the line
-        self._download_video()
-        self._hash_video()
-        self._finger_print_video()
-        self._compare_video()
-        self._remove_cache()
+
+    def _load_PATH_list(self) -> None:
+        self.PATH_list = np.empty(0, dtype=str)
+        with open(self.input_filepath, "r") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                self.PATH_list = np.append(self.PATH_list, row[0])
+        self.video_detail_dataframe["PATH"] = self.PATH_list
+        logging.debug("Loaded PATH list: {}".format(self.PATH_list))
+        logging.info("Loaded PATH list from {} with {} {} files.".format(self.PATH_list_filepath, self.PATH_list.shape[0], self.PATH_list.shape))
+        print("PATH list loading phase complete.")
 
     def _download_video(self) -> None:
         #* Download video from URL
@@ -150,7 +180,13 @@ class VideoSimilarityTester:
         logging.info("Removed {} files.".format(len(self.PATH_list)))
         print("Cache removing phase complete.")
 
+    def __compare_result(self, vid1_code, vid2_code) -> None:
+        pass
+
+
 if __name__ == "__main__":
-    filepath = "./URL_list.csv"
+    URL_filepath = "./URL_list.csv"
+    PATH_filepath = "./PATH_list.csv"
     cache_path = "./cache"
-    tester = VideoSimilarityTester(filepath, cache_path, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10)
+    # VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=URL_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10, remove_cache=False)
+    VideoSimilarityTester(cache_path=cache_path, PATH_list_filepath=PATH_filepath, export_video_detail=cache_path, export_comparison_result=cache_path, similar_percentage=10, remove_cache=False)

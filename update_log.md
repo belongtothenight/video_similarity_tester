@@ -8,3 +8,5 @@
 | 4   | 20230924 | Add similar percentage threshold setting ability.                                                  |
 | 5   | 20230924 | Add "Usage" section in "./README.md" file.                                                         |
 | 6   | 20230924 | Add filepath exist check to "./src/main.py".                                                       |
+| 7   | 20230924 | Add ability to take local video files.                                                             |
+| 8   | 20230924 | Add "./gitignore".                                                                                 |
