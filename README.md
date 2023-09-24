@@ -8,6 +8,8 @@ This repo aims for developing a automatic batch video similarity tester.
 
 ## Usage
 
+[Click here to see demo video.](https://youtu.be/900zgVB_6vA)
+
 ### 1. Create CSV
 
 Format your CSV file content to be either in **[PATH](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/PATH_list.csv)** or **[YouTubeURL](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/URL_list.csv)**
