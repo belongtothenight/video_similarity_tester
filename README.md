@@ -40,6 +40,10 @@ sys.argv[?] (--weight) weight of videohash method (default: 0.7)
 sys.argv[?] (-h/--help) help (show available options)
 ```
 
+### 3. Check Output
+
+The program will generate the results in your specified location, like **[VideoDetail](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/cache/video_detail.csv)** and **[ComparisonResult](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/cache/comparison_result.csv)**
+
 ## Process Flow
 
 1. Generate video hash.

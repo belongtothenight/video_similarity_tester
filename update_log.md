@@ -17,3 +17,5 @@
 | 13  | 20230924 | Update "./gitignore" to exclude build data.                                                        |
 | 14  | 20230924 | Add build command to "./README.md".                                                                |
 | 15  | 20230924 | Update usage of "./README.md".                                                                     |
+| 16  | 20230924 | Add result section in "./README.md".                                                               |
+| 17  | 20230924 | Remove videos in repo.                                                                             |
