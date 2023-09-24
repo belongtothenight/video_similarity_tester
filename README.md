@@ -8,7 +8,8 @@ This repo aims for developing a automatic batch video similarity tester.
 
 ## Usage
 
-```Usage: python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
+```
+Usage: python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
 
 For URL links: ONLY ACCEPT YOUTUBE LINKS
 
