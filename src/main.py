@@ -12,9 +12,38 @@ import getopt
 
 # logging.basicConfig(level=logging.DEBUG)
 # logging.basicConfig(level=logging.INFO)
-# logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
 # logging.basicConfig(level=logging.ERROR)
 # logging.basicConfig(level=logging.CRITICAL)
+
+class VST_Error:
+    def __init__(self) -> None:
+        self.error_str = "\033[91m"
+        self.end_str = "\033[0m"
+        
+    def argument_not_enough(self) -> None:
+        print("{}Argument is not enough.{}".format(self.error_str, self.end_str))
+        sys.exit()
+
+    def invalid_argument(self, argument:str) -> None:
+        print("{}Invalid argument contained in {}.{}".format(self.error_str, argument, self.end_str))
+        sys.exit()
+
+    def path_not_exist(self, path: str) -> None:
+        print("{}Path {} does not exist.{}".format(self.error_str, path, self.end_str))
+        sys.exit()
+
+    def file_not_exist(self, file: str) -> None:
+        print("{}File {} does not exist.{}".format(self.error_str, file, self.end_str))
+        sys.exit()
+
+class VST_Warning:
+    def __init__(self) -> None:
+        self.warning_str = "\033[93m"
+        self.end_str = "\033[0m"
+
+    def action_failed(self, action: str) -> None:
+        print("{}Action {} failed.{}".format(self.warning_str, action, self.end_str))
 
 class VideoSimilarityTester:
     #* Class to test similarity between videos
@@ -22,7 +51,7 @@ class VideoSimilarityTester:
         #* Check input method (URL list or PATH list)
         if URL_list_filepath == None and PATH_list_filepath == None:
             logging.critical("URL list or PATH list must be provided.")
-            raise Exception("URL list or PATH list must be provided.")
+            VST_Error().argument_not_enough()
         self.input_method = "URL_list" if URL_list_filepath != None else "PATH_list"
         #* Initialize class
         self.URL_list_filepath = URL_list_filepath
@@ -37,25 +66,39 @@ class VideoSimilarityTester:
         if self.input_method == "URL_list":
             if not os.path.exists(self.URL_list_filepath):
                 logging.critical("URL list file does not exist.")
-                raise Exception("URL list file does not exist.")
+                VST_Error().path_not_exist(self.URL_list_filepath)
         elif self.input_method == "PATH_list":
             if not os.path.exists(self.PATH_list_filepath):
                 logging.critical("PATH list file does not exist.")
-                raise Exception("PATH list file does not exist.")
+                VST_Error().path_not_exist(self.PATH_list_filepath)
         if not os.path.exists(self.cache_path):
             logging.critical("Cache path does not exist.")
-            raise Exception("Cache path does not exist.")
+            VST_Error().path_not_exist(self.cache_path)
         if self.export_video_detail != False:
             if not os.path.exists(self.export_video_detail):
                 logging.critical("Export video detail path does not exist.")
-                raise Exception("Export video detail path does not exist.")
+                VST_Error().path_not_exist(self.export_video_detail)
         if self.export_comparison_result != False:
             if not os.path.exists(self.export_comparison_result):
                 logging.critical("Export comparison result path does not exist.")
-                raise Exception("Export comparison result path does not exist.")
+                VST_Error().path_not_exist(self.export_comparison_result)
         #* Create variable
         self.URL_list = np.empty(0, dtype=str)
         self.video_detail_dataframe = pd.DataFrame(columns=["URL", "TITLE", "PATH", "HASH", "HASH_HEX", "COLLAGE_PATH", "BITS_IN_HASH", "FINGER_PRINT"])
+        self.PATH_list = np.empty(0, dtype=str)
+        self.TITLE_list = np.empty(0, dtype=str)
+        self.VideoHash_list = []
+        self.HASH_list = np.empty(0, dtype=str)
+        self.HASH_HEX_list = np.empty(0, dtype=str)
+        self.COLLAGE_PATH_list = np.empty(0, dtype=str)
+        self.BITS_IN_HASH_list = np.empty(0, dtype=str)
+        self.FINGER_PRINT_list = np.empty(0, dtype=str)
+        self.comparison_dataframe = pd.DataFrame(columns=["vid1_idx", "vid2_idx", "mix_idx", "hash_similarity", "fingerprint_similarity", "avg_similarity"])
+        self.comparison_vid1_idx_list = np.empty(0, dtype=int)
+        self.comparison_vid2_idx_list = np.empty(0, dtype=int)
+        self.comparison_mix_idx_list = np.empty(0, dtype=str)
+        self.comparison_result_list1 = np.empty(0, dtype=float)
+        self.comparison_result_list2 = np.empty(0, dtype=float)
         #* Call next function on the line
         if self.input_method == "URL_list":
             self.input_filepath = self.URL_list_filepath
@@ -93,9 +136,6 @@ class VideoSimilarityTester:
         print("PATH list loading phase complete.")
 
     def _download_video(self) -> None:
-        #* Create variable
-        self.PATH_list = np.empty(0, dtype=str)
-        self.TITLE_list = np.empty(0, dtype=str)
         #* Download video from URL
         for i, url in enumerate(self.URL_list):
             logging.debug("Downloading video from {}.".format(url))
@@ -111,6 +151,7 @@ class VideoSimilarityTester:
             print("Downloaded {}/{} videos.".format(i+1, self.URL_list.shape[0]), end="\r")
         if self.PATH_list.shape[0] != self.URL_list.shape[0]:
             logging.warning("Some videos are not downloaded.")
+            VST_Warning().action_failed("download video")
         self.video_detail_dataframe["PATH"] = self.PATH_list
         self.video_detail_dataframe["TITLE"] = self.TITLE_list
         logging.debug("Downloaded video list: {}".format(self.PATH_list))
@@ -118,12 +159,6 @@ class VideoSimilarityTester:
         print("Video downloading phase complete.")
 
     def _hash_video(self) -> None:
-        #* Create variable
-        self.VideoHash_list = []
-        self.HASH_list = np.empty(0, dtype=str)
-        self.HASH_HEX_list = np.empty(0, dtype=str)
-        self.COLLAGE_PATH_list = np.empty(0, dtype=str)
-        self.BITS_IN_HASH_list = np.empty(0, dtype=str)
         #* Hash video
         for i, path in enumerate(self.PATH_list):
             logging.debug("Hashing video from {}.".format(path))
@@ -138,18 +173,16 @@ class VideoSimilarityTester:
             print("Hashed {}/{} videos.".format(i+1, self.PATH_list.shape[0]), end="\r")
         if self.HASH_list.shape[0] != self.PATH_list.shape[0]:
             logging.warning("Some videos are not hashed.")
+            VST_Warning().action_failed("hash video")
         self.video_detail_dataframe["HASH"] = self.HASH_list
         self.video_detail_dataframe["HASH_HEX"] = self.HASH_HEX_list
         self.video_detail_dataframe["COLLAGE_PATH"] = self.COLLAGE_PATH_list
         self.video_detail_dataframe["BITS_IN_HASH"] = self.BITS_IN_HASH_list
-        del self.URL_list, self.HASH_list, self.HASH_HEX_list, self.COLLAGE_PATH_list, self.BITS_IN_HASH_list
         logging.debug("Hashed video list: {}".format(self.VideoHash_list))
         logging.info("Hashed {} videos.".format(len(self.VideoHash_list)))
         print("Video hashing phase complete.")
     
     def _finger_print_video(self) -> None:
-        #* Create variable
-        self.FINGER_PRINT_list = np.empty(0, dtype=str)
         #* Fingerprint video
         for i, path in enumerate(self.PATH_list):
             logging.debug("Fingerprinting video from {}.".format(path))
@@ -160,6 +193,7 @@ class VideoSimilarityTester:
             print("Fingerprinted {}/{} videos.".format(i+1, self.PATH_list.shape[0]), end="\r")
         if self.FINGER_PRINT_list.shape[0] != self.PATH_list.shape[0]:
             logging.warning("Some videos are not fingerprinted.")
+            VST_Warning().action_failed("fingerprint video")
         self.video_detail_dataframe["FINGER_PRINT"] = self.FINGER_PRINT_list
         logging.debug("Fingerprinted video list: {}".format(self.VideoHash_list))
         logging.info("Fingerprinted {} videos.".format(len(self.VideoHash_list)))
@@ -172,13 +206,6 @@ class VideoSimilarityTester:
         print("Exported video detail to {}.".format(export_path))
 
     def _generate_result(self) -> None:
-        #* Create variable
-        self.comparison_dataframe = pd.DataFrame(columns=["vid1_idx", "vid2_idx", "mix_idx", "hash_similarity", "fingerprint_similarity", "avg_similarity"])
-        self.comparison_vid1_idx_list = np.empty(0, dtype=int)
-        self.comparison_vid2_idx_list = np.empty(0, dtype=int)
-        self.comparison_mix_idx_list = np.empty(0, dtype=str)
-        self.comparison_result_list1 = np.empty(0, dtype=float)
-        self.comparison_result_list2 = np.empty(0, dtype=float)
         #* Compare video
         for i, j in itertools.combinations(self.VideoHash_list, 2):
             cmp_obj_1 = self.VideoHash_list.index(i)
@@ -197,7 +224,6 @@ class VideoSimilarityTester:
         self.comparison_dataframe["hash_similarity"] = self.comparison_result_list1
         self.comparison_dataframe["fingerprint_similarity"] = (self.comparison_result_list2 - self.comparison_result_list2.min()) / (self.comparison_result_list2.max() - self.comparison_result_list2.min()) #* Normalize fingerprint similarity
         self.comparison_dataframe["avg_similarity"] = (self.comparison_dataframe["hash_similarity"] * self.method_weight[0]) + (self.comparison_dataframe["fingerprint_similarity"] * self.method_weight[1])
-        del self.comparison_vid1_idx_list, self.comparison_vid2_idx_list, self.comparison_result_list1, self.comparison_result_list2
         logging.debug("Comparison dataframe: {}".format(self.comparison_dataframe))
         logging.info("Comparison dataframe generated.")
         print("Video comparison phase complete.")
@@ -254,7 +280,7 @@ def input_file_check(input_filepath: str) -> None:
     #* Check if path is valid
     if not os.path.exists(input_filepath):
         logging.critical("Input file does not exist.")
-        raise Exception("Input file does not exist.")
+        VST_Error().path_not_exist(input_filepath)
     #* Read first line
     with open(input_filepath, "r") as f:
         reader = csv.reader(f)
@@ -287,7 +313,7 @@ def execute():
         opts, args = getopt.getopt(sys.argv[4:], available_short_options, available_long_options)
     except getopt.GetoptError:
         logging.critical("Invalid arguments.")
-        raise Exception("Invalid arguments.")
+        VST_Error().invalid_argument(sys.argv[4:])
     #* Check for help
     if len(sys.argv) < 4:
         if '-h' in sys.argv or '--help' in sys.argv:
@@ -295,7 +321,7 @@ def execute():
             sys.exit()
         else:
             logging.critical("Not enough arguments.")
-            raise Exception("Not enough arguments.")
+            VST_Error().argument_not_enough()
     #* Initialize variable
     remove_cache = False
     method_weight = 0.7

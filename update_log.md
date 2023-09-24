@@ -20,3 +20,4 @@
 | 16  | 20230924 | Add result section in "./README.md".                                                               |
 | 17  | 20230924 | Remove videos in repo.                                                                             |
 | 18  | 20230924 | Add demo video in "./README.md".                                                                   |
+| 19  | 20230924 | Error handling.                                                                                    |
