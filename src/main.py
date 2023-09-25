@@ -9,6 +9,7 @@ import os
 import itertools
 import sys
 import getopt
+import subprocess
 
 # logging.basicConfig(level=logging.DEBUG)
 # logging.basicConfig(level=logging.INFO)
@@ -18,8 +19,10 @@ logging.basicConfig(level=logging.WARNING)
 
 class VST_Error:
     def __init__(self) -> None:
-        self.error_str = "\033[91m"
-        self.end_str = "\033[0m"
+        # self.error_str = "\033[91m"
+        # self.end_str = "\033[0m"
+        self.error_str = "ERROR: "
+        self.end_str = "ERROR: "
         
     def argument_not_enough(self) -> None:
         print("{}Argument is not enough.{}".format(self.error_str, self.end_str))
@@ -37,10 +40,16 @@ class VST_Error:
         print("{}File {} does not exist.{}".format(self.error_str, file, self.end_str))
         sys.exit()
 
+    def dependency_not_found(self, dependency: str) -> None:
+        print("{}Dependency {} not found.{}".format(self.error_str, dependency, self.end_str))
+        sys.exit()
+
 class VST_Warning:
     def __init__(self) -> None:
-        self.warning_str = "\033[93m"
-        self.end_str = "\033[0m"
+        # self.warning_str = "\033[93m"
+        # self.end_str = "\033[0m"
+        self.warning_str = "WARNING: "
+        self.end_str = "WARNING"
 
     def action_failed(self, action: str) -> None:
         print("{}Action {} failed.{}".format(self.warning_str, action, self.end_str))
@@ -163,7 +172,10 @@ class VideoSimilarityTester:
         for i, path in enumerate(self.PATH_list):
             logging.debug("Hashing video from {}.".format(path))
             #* Hash video
-            videohash = VideoHash(path)
+            try:
+                videohash = VideoHash(path)
+            except videohash.exceptions.FFmpegNotFound:
+                VST_Error().dependency_not_found("FFmpeg")
             #* Save data to list
             self.VideoHash_list.append(videohash)
             self.HASH_list = np.append(self.HASH_list, videohash.hash)
@@ -294,6 +306,16 @@ def input_file_check(input_filepath: str) -> None:
         input_method = "PATH_list"
     return input_method
 
+def ffmpeg_check() -> None:
+    #* Check if FFmpeg is installed
+    print("Checking FFmpeg...", end="\r")
+    try:
+        subprocess.check_output(["ffmpeg", "-version"])
+        installed = True
+    except FileNotFoundError:
+        VST_Error().dependency_not_found("FFmpeg")
+    print("Checking FFmpeg...OK")
+
 def execute():
     """    Video Similarity Tester
     Usage: python main.py <input_file> <cache_path> <export_result_path> [--remove-cache] [--weight=<weight>] [-h/--help]
@@ -336,6 +358,8 @@ def execute():
             method_weight = float(arg)
     #* Check input method (URL list or PATH list)
     input_method = input_file_check(list_filepath)
+    #* Check if FFmpeg is installed
+    ffmpeg_check()
     #* Call class
     if input_method == "URL_list":
         VideoSimilarityTester(cache_path=cache_path, URL_list_filepath=list_filepath, export_video_detail=export_result_path, export_comparison_result=export_result_path, remove_cache=remove_cache, method_weight=[method_weight, 1-method_weight])
