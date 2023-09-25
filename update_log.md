@@ -21,4 +21,5 @@
 | 17  | 20230924 | Remove videos in repo.                                                                             |
 | 18  | 20230924 | Add demo video in "./README.md".                                                                   |
 | 19  | 20230924 | Error handling.                                                                                    |
-| 20  | 20230924 | Error handling FFMPEG invailability.                                                               |
+| 20  | 20230925 | Error handling FFMPEG invailability.                                                               |
+| 21  | 20230925 | Improve looping mechanics.                                                                         |

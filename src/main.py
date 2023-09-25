@@ -219,15 +219,14 @@ class VideoSimilarityTester:
 
     def _generate_result(self) -> None:
         #* Compare video
-        for i, j in itertools.combinations(self.VideoHash_list, 2):
-            cmp_obj_1 = self.VideoHash_list.index(i)
-            cmp_obj_2 = self.VideoHash_list.index(j)
+        index_list = np.arange(len(self.VideoHash_list))
+        for cmp_obj_1, cmp_obj_2 in itertools.combinations(index_list, 2):
             self.comparison_vid1_idx_list = np.append(self.comparison_vid1_idx_list, cmp_obj_1)
             self.comparison_vid2_idx_list = np.append(self.comparison_vid2_idx_list, cmp_obj_2)
             self.comparison_mix_idx_list = np.append(self.comparison_mix_idx_list, str(cmp_obj_1)+"-"+str(cmp_obj_2))
             #! Abandoned using VideoHash.is_similar() because it shows too little information
             # self.comparison_result_list1 = np.append(self.comparison_result_list1, i.is_similar(j))
-            self.comparison_result_list1 = np.append(self.comparison_result_list1, self.__compare_code(i.hash, j.hash))
+            self.comparison_result_list1 = np.append(self.comparison_result_list1, self.__compare_code(self.VideoHash_list[cmp_obj_1].hash, self.VideoHash_list[cmp_obj_2].hash))
             self.comparison_result_list2 = np.append(self.comparison_result_list2, self.__compare_code(self.FINGER_PRINT_list[cmp_obj_1], self.FINGER_PRINT_list[cmp_obj_2]))
         self.comparison_dataframe["vid1_idx"] = self.comparison_vid1_idx_list
         self.comparison_dataframe["vid2_idx"] = self.comparison_vid2_idx_list
