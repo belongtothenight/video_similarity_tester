@@ -23,7 +23,7 @@ python main.py ./URL.csv ./cache ./cache --remove-cache --weight=0.7
 
 Downloaded release: ([Download](https://github.com/belongtothenight/video_similarity_tester/releases/tag/v1.0.0))
 ```
-vst_v1.1.0.exe ./PATH.csv ./cache ./cache --remove-cache --weight=0.7
+vst_v1.2.0.exe ./PATH.csv ./cache ./cache --remove-cache --weight=0.7
 ```
 
 Help message:
