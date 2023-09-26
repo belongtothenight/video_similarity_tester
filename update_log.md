@@ -23,3 +23,4 @@
 | 19  | 20230924 | Error handling.                                                                                    |
 | 20  | 20230925 | Error handling FFMPEG invailability.                                                               |
 | 21  | 20230925 | Improve looping mechanics.                                                                         |
+| 22  | 20230926 | Add further error handling by implementing error logging and action retry.                         |

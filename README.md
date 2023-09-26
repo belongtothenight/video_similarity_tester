@@ -64,4 +64,4 @@ The program will generate the results in your specified location, like **[VideoD
 
 ## EXE command
 
-```pyinstaller --noconfirm --onefile --console --hidden-import "" "./main.py"```
+```pyinstaller "./main.py" --noconfirm --onefile --console --clean --name="vst_v1.4.0"```

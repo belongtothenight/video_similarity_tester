@@ -1,0 +1,8 @@
+2023-09-26 10:21:15,364 - INFO root - Loaded URL list from .\URL_list.csv with 9 (9,) files.
+2023-09-26 10:21:20,563 - WARNING __main__ - 'NoneType' object has no attribute 'span'
+2023-09-26 10:21:20,563 - WARNING root - Failed to download 1th video from https://youtu.be/K46_xkXOUrc. Try count: 1
+2023-09-26 10:21:22,492 - WARNING __main__ - 'NoneType' object has no attribute 'span'
+2023-09-26 10:21:22,492 - WARNING root - Failed to download 1th video from https://youtu.be/K46_xkXOUrc. Try count: 2
+2023-09-26 10:21:58,050 - INFO root - Downloaded 9 videos.
+2023-09-26 10:22:38,840 - INFO root - Comparison dataframe generated.
+2023-09-26 10:22:38,848 - INFO root - Removed 9 files.
