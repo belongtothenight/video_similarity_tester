@@ -6,6 +6,8 @@ This repo aims for developing a automatic batch video similarity tester.
 
 **FFMPEG**
 
+On windows, download [Chocolatey](https://chocolatey.org/install), and use it to install ffmpeg with command "choco install ffmpeg" in cmd/pwsh/pwsh7.
+
 ## Usage
 
 [Click here to see demo video.](https://youtu.be/900zgVB_6vA)
@@ -46,6 +48,9 @@ sys.argv[?] (-h/--help) help (show available options)
 
 The program will generate the results in your specified location, like **[VideoDetail](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/cache/video_detail.csv)** and **[ComparisonResult](https://github.com/belongtothenight/video_similarity_tester/blob/main/src/cache/comparison_result.csv)**
 
+### 4. Error
+
+If any error occurs, please send the "./vst.log" file to me for further debugging.
 ## Process Flow
 
 1. Generate video hash.
